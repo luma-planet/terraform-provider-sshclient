@@ -19,3 +19,11 @@ Then, run the following command to initialize the workspace and apply the sample
 ```shell
 terraform init && terraform apply
 ```
+
+## TODO for v1
+
+- [ ] release
+- [ ] unit test
+- [ ] acc test
+- [ ] CI
+- [ ] badges
