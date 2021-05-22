@@ -17,9 +17,11 @@ jobs:
         sudo useradd -m -d /home/pwuser -s /bin/bash pwuser
         export TEST_PW_SSH_PASSWORD=$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | tail -n +1 | head -c32)
         echo pwuser:$TEST_PW_SSH_PASSWORD | sudo chpasswd
-        TEST_PUBKEY_SSH_PRIKEY_PATH=/home/pubkeyuser/.ssh/id_rsa_test
+        TEST_PUBKEY_SSH_PRIKEY_PATH=~/.ssh/id_rsa_test
         sudo sudo -u pubkeyuser mkdir -p $(dirname $TEST_PUBKEY_SSH_PRIKEY_PATH)
-        sudo sudo -u pubkeyuser ssh-keygen -q -t rsa -b 4096 -f $TEST_PUBKEY_SSH_PRIKEY_PATH -N ''
+        ssh-keygen -q -t rsa -b 4096 -f $TEST_PUBKEY_SSH_PRIKEY_PATH -N ''
+        sudo cp $TEST_PUBKEY_SSH_PRIKEY_PATH.pub /home/pubkeyuser/.ssh/authorized_key
+        sudo chown -R pubkeyuser:pubkeyuser /home/pubkeyuser
 
         cat <<EOF
         TEST_PW_SSH_HOST=localhost
@@ -27,8 +29,8 @@ jobs:
         TEST_PW_SSH_PASSWORD=$TEST_PW_SSH_PASSWORD
 
         TEST_PUBKEY_SSH_HOST=localhost
-        TEST_PUBKEY_SSH_USER=pwuser
-        TEST_PUBKEY_SSH_PRIKEY_PATH=$TEST_PUBKEY_SSH_PRIKEY_PATH
+        TEST_PUBKEY_SSH_USER=pubkeyuser
+        TEST_PUBKEY_SSH_PRIKEY_PATH=$TEST_PUBKEY_SSH_PRIKEY_PATH.pub
         EOF > test.local.env
 
         sudo sed -i -e 's/^\s*#\?\s*PasswordAuthentication\s.*$/PasswordAuthentication yes/g' /etc/ssh/sshd_config
