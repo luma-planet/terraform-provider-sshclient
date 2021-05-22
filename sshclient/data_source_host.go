@@ -31,9 +31,9 @@ func dataSourceHost() *schema.Resource {
 				Sensitive: true,
 			},
 			"port": {
-				Type:     schema.TypeInt,
-				Default:  22,
-				Optional: true,
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "If no port specified, 22 is used as default port.",
 			},
 			"username": {
 				Type:     schema.TypeString,
@@ -69,7 +69,7 @@ const (
 	tcpPortMax int = 65535
 )
 
-type Host struct {
+type host struct {
 	Hostname                   string `json:"hostname"`
 	Port                       int    `json:"port"`
 	Username                   string `json:"username"`
@@ -79,44 +79,44 @@ type Host struct {
 	InsecureIgnoreHostKey      bool   `json:"insecure_ignore_host_key"`
 }
 
-func (h *Host) String() string {
+func (h *host) String() string {
 	hostPart := fmt.Sprintf("%s@%s:%d", h.Username, h.Hostname, h.Port)
-	auth := h.StringAuthMethod()
+	auth := h.stringAuthMethod()
 	if auth == "" {
 		return hostPart
 	}
 	return fmt.Sprintf("%s (Auth with %s)", hostPart, auth)
 }
 
-func (h *Host) ValidateHostInfo() error {
+func (h *host) validateHostInfo() error {
 	if h.Hostname == "" {
-		return fmt.Errorf("Hostname is not provided.")
+		return fmt.Errorf("hostname is not provided")
 	}
 
 	if h.Port < tcpPortMin || h.Port > tcpPortMax {
-		return fmt.Errorf("Port number out of range. %d", h.Port)
+		return fmt.Errorf("port number out of range. %d", h.Port)
 	}
 
 	if h.Username == "" {
-		return fmt.Errorf("Username is not provided.")
+		return fmt.Errorf("username is not provided")
 	}
 
 	if (h.HostPublickeyAuthorizedKey == "") == !h.InsecureIgnoreHostKey {
-		return fmt.Errorf("Exactly one of host_publickey_authorized_key and insecure_ignore_host_key is needed.")
+		return fmt.Errorf("exactly one of host_publickey_authorized_key and insecure_ignore_host_key is needed")
 	}
 
 	return nil
 }
 
-func (h *Host) ValidateAuthInfo() error {
+func (h *host) validateAuthInfo() error {
 	if (h.Password == "") == (h.ClientPrivateKeyPem == "") {
-		return fmt.Errorf("Exactly one of password and client_private_key_pem is needed.")
+		return fmt.Errorf("exactly one of password and client_private_key_pem is needed")
 	}
 
 	return nil
 }
 
-func (h *Host) StringAuthMethod() string {
+func (h *host) stringAuthMethod() string {
 	if h.Password != "" {
 		return "password"
 	} else if h.ClientPrivateKeyPem != "" {
@@ -125,7 +125,7 @@ func (h *Host) StringAuthMethod() string {
 	return ""
 }
 
-func (h *Host) AuthMethod() ([]ssh.AuthMethod, error) {
+func (h *host) authMethod() ([]ssh.AuthMethod, error) {
 	var auth []ssh.AuthMethod
 	if h.Password != "" {
 		auth = append(auth, ssh.Password(h.Password))
@@ -141,8 +141,8 @@ func (h *Host) AuthMethod() ([]ssh.AuthMethod, error) {
 	return auth, nil
 }
 
-func (h *Host) ClientConfig() (*ssh.ClientConfig, error) {
-	auth, err := h.AuthMethod()
+func (h *host) ClientConfig() (*ssh.ClientConfig, error) {
+	auth, err := h.authMethod()
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ func (h *Host) ClientConfig() (*ssh.ClientConfig, error) {
 	}, nil
 }
 
-func (h *Host) RunCommand(command string, stdout io.Writer, stderr io.Writer) error {
+func (h *host) RunCommand(command string, stdout io.Writer, stderr io.Writer) error {
 	config, err := h.ClientConfig()
 	if err != nil {
 		return err
@@ -192,7 +192,7 @@ func (h *Host) RunCommand(command string, stdout io.Writer, stderr io.Writer) er
 	return nil
 }
 
-func MarshalHost(h *Host) (string, error) {
+func MarshalHost(h *host) (string, error) {
 	bytes, err := json.Marshal(h)
 	if err != nil {
 		return "", err
@@ -200,8 +200,8 @@ func MarshalHost(h *Host) (string, error) {
 	return string(bytes), nil
 }
 
-func UnmarshalHost(str string) (*Host, error) {
-	h := &Host{}
+func UnmarshalHost(str string) (*host, error) {
+	h := &host{}
 	err := json.Unmarshal([]byte(str), h)
 	if err != nil {
 		return nil, err
@@ -211,7 +211,7 @@ func UnmarshalHost(str string) (*Host, error) {
 }
 
 func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	h := &Host{
+	h := &host{
 		Port: 22,
 	}
 
@@ -226,26 +226,38 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, m interface
 
 	if hn, ok := d.GetOk("hostname"); ok {
 		h.Hostname = hn.(string)
+	} else {
+		d.Set("hostname", h.Hostname)
 	}
 
 	if p, ok := d.GetOk("port"); ok {
 		h.Port = p.(int)
+	} else {
+		d.Set("port", h.Port)
 	}
 
 	if un, ok := d.GetOk("username"); ok {
 		h.Username = un.(string)
+	} else {
+		d.Set("username", h.Username)
 	}
 
 	if pw, ok := d.GetOk("password"); ok {
 		h.Password = pw.(string)
+	} else {
+		d.Set("password", h.Password)
 	}
 
 	if key, ok := d.GetOk("client_private_key_pem"); ok {
 		h.ClientPrivateKeyPem = key.(string)
+	} else {
+		d.Set("client_private_key_pem", h.ClientPrivateKeyPem)
 	}
 
 	if key, ok := d.GetOk("host_publickey_authorized_key"); ok {
 		h.HostPublickeyAuthorizedKey = key.(string)
+	} else {
+		d.Set("host_publickey_authorized_key", h.HostPublickeyAuthorizedKey)
 	}
 
 	h.InsecureIgnoreHostKey = d.Get("insecure_ignore_host_key").(bool)

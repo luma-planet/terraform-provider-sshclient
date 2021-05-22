@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     sshclient = {
-      version = "0.1"
+      version = "0.2"
       source  = "github.com/luma-planet/sshclient"
     }
   }
@@ -62,7 +62,7 @@ resource "sshclient_scp_put" "myhost__checksum_sh" {
 
 resource "sshclient_run" "myhost_checksum" {
   host_json = data.sshclient_host.myhost_main.json
-  command   = "./checksum.sh"
+  command   = "./checksum.sh ${filesha256("./checksum.sh")}"
   expect    = "784955"
   depends_on = [
     sshclient_scp_put.myhost__checksum_sh,

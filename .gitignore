@@ -68,3 +68,7 @@ terraform
 
 # This is provider project
 .terraform.lock.hcl
+
+# dotenv
+local.env
+*.local.env

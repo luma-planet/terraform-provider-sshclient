@@ -1,0 +1,37 @@
+name: test
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '^1.16.4'
+    - run: |
+        sudo useradd -m -d /home/pubkeyuser -s /bin/bash pubkeyuser
+        sudo useradd -m -d /home/pwuser -s /bin/bash pwuser
+        export TEST_PW_SSH_PASSWORD=$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c${1:-32};echo;)
+        cat /dev/random | xxd
+        echo $TEST_PW_SSH_PASSWORD | sudo passwd pwuser
+        TEST_PUBKEY_SSH_PRIKEY_PATH=/home/pubkeyuser/.ssh/id_rsa_test
+        ssh-keygen -q -t rsa -b 4096 -f $TEST_PUBKEY_SSH_PRIKEY_PATH -N ''
+        sudo chown -R pubkeyuser:pubkeyuser /home/pubkeyuser
+        cat <<EOF
+        TEST_PW_SSH_HOST=localhost
+        TEST_PW_SSH_USER=pwuser
+        TEST_PW_SSH_PASSWORD=$TEST_PW_SSH_PASSWORD
+
+        TEST_PUBKEY_SSH_HOST=localhost
+        TEST_PUBKEY_SSH_USER=pwuser
+        TEST_PUBKEY_SSH_PRIKEY_PATH=$TEST_PUBKEY_SSH_PRIKEY_PATH
+        EOF > test.local.env
+
+        sudo sed -i -e 's/^\s*#\?\s*PasswordAuthentication\s.*$/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+        sudo service ssh reload
+
+    - run: make testacc

@@ -1,5 +1,8 @@
 # Terraform Provider SSH Client
 
+[![](https://img.shields.io/github/go-mod/go-version/luma-planet/terraform-provider-sshclient?style=flat-square)](https://github.com/luma-planet/terraform-provider-sshclient)
+[![](https://img.shields.io/github/workflow/status/luma-planet/terraform-provider-sshclient/staticcheck?style=flat-square)]()
+
 Run the following command to build the provider
 
 ```shell

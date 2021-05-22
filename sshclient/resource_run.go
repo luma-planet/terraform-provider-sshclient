@@ -30,6 +30,10 @@ func resourceRun() *schema.Resource {
 				Optional:    true,
 				Description: "Command run on creations and updates. This should be idempotent so that it can be executed any amount of times. This will also be run for reverting deletion failures.",
 			},
+			"command_base64": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"expect": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -56,6 +60,10 @@ func resourceRun() *schema.Resource {
 				Optional:    true,
 				Description: "Command run on deletions. This should be idempotent so that it can be executed any amount of times. If it fails, command for creation will be run.",
 			},
+			"destroy_command_base64": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"destroy_expect": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -74,24 +82,37 @@ func resourceRunCommon(
 	ctx context.Context,
 	d *schema.ResourceData,
 	m interface{},
-	h *Host,
-	cmd, exp, keyOut, keyOut64, keyErr, keyErr64 string,
+	h *host,
+	cmd, cmd64, exp, keyOut, keyOut64, keyErr, keyErr64 string,
 	timeout time.Duration,
 ) error {
-	if err := h.ValidateHostInfo(); err != nil {
+	if err := h.validateHostInfo(); err != nil {
 		return err
 	}
 
-	if err := h.ValidateAuthInfo(); err != nil {
+	if err := h.validateAuthInfo(); err != nil {
 		return err
 	}
 
 	var command string
 
-	if c, ok := d.GetOk(cmd); ok {
-		command = c.(string)
-	} else {
-		return nil
+	{
+		c, ok := d.GetOk(cmd)
+		c64, ok64 := d.GetOk(cmd64)
+		if ok && ok64 {
+			return fmt.Errorf("up to one of %s and %s should be specified", cmd, cmd64)
+		}
+		if ok {
+			command = c.(string)
+		} else if ok64 {
+			b, err := base64.StdEncoding.DecodeString(c64.(string))
+			if err != nil {
+				return err
+			}
+			command = string(b)
+		} else {
+			return nil
+		}
 	}
 
 	var stdout, stderr bytes.Buffer
@@ -101,32 +122,36 @@ func resourceRunCommon(
 
 	go func() {
 		defer wg.Done()
-		var err error
-		err = h.RunCommand(command, &stdout, &stderr)
+		err := h.RunCommand(command, &stdout, &stderr)
 		if err != nil {
 			errCh <- err
 			return
 		}
 	}()
+
+	c := make(chan struct{})
 	go func() {
-		defer wg.Done()
-		time.Sleep(timeout)
-		errCh <- fmt.Errorf("Timeout limit exceeded. Timeout is %s.", timeout)
+		defer close(c)
+		wg.Wait()
 	}()
 
-	wg.Wait()
+	select {
+	case <-c:
+		break
+	case <-time.After(timeout):
+		return fmt.Errorf("timeout limit exceeded: timeout is %s", timeout)
+	}
+
 	close(errCh)
 
 	for err := range errCh {
-		return fmt.Errorf(`Error occured while running.
-%s
+		return fmt.Errorf(`error occurred while running: %s
 
 stdout:
 %s
 
 stderr:
-%s
-`, err.Error(), stdout.String(), stderr.String())
+%s`, err.Error(), stdout.String(), stderr.String())
 	}
 
 	if ex, ok := d.GetOk(exp); ok {
@@ -135,23 +160,23 @@ stderr:
 		ac := bytes.TrimSpace(stdout.Bytes())
 
 		if !bytes.Equal(ex, ac) {
-			return fmt.Errorf(`The output for destroy command is not the same as expectd.
+			return fmt.Errorf(`the output for destroy command is not the same as expected
 	Expected: %s
 	Actual  : %s`, string(ex), string(ac))
 		}
 	}
 
 	if keyOut != "" {
-		d.Set(keyOut, string(stdout.Bytes()))
+		d.Set(keyOut, stdout.String())
 	}
 	if keyOut64 != "" {
 		d.Set(keyOut64, base64.StdEncoding.EncodeToString(stdout.Bytes()))
 	}
 	if keyErr != "" {
-		d.Set(keyErr, string(stdout.Bytes()))
+		d.Set(keyErr, stderr.String())
 	}
 	if keyErr64 != "" {
-		d.Set(keyErr64, base64.StdEncoding.EncodeToString(stdout.Bytes()))
+		d.Set(keyErr64, base64.StdEncoding.EncodeToString(stderr.Bytes()))
 	}
 
 	return nil
@@ -171,6 +196,7 @@ func resourceRunCreate(ctx context.Context, d *schema.ResourceData, m interface{
 		m,
 		h,
 		"command",
+		"command_base64",
 		"expect",
 		"stdout",
 		"stdout_base64",
@@ -197,11 +223,11 @@ func resourceRunRead(ctx context.Context, d *schema.ResourceData, m interface{})
 		return diag.FromErr(err)
 	}
 
-	if err := h.ValidateHostInfo(); err != nil {
+	if err := h.validateHostInfo(); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := h.ValidateAuthInfo(); err != nil {
+	if err := h.validateAuthInfo(); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -223,6 +249,7 @@ func resourceRunUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 		m,
 		h,
 		"command",
+		"command_base64",
 		"expect",
 		"stdout",
 		"stdout_base64",
@@ -253,6 +280,7 @@ func resourceRunDelete(ctx context.Context, d *schema.ResourceData, m interface{
 		m,
 		h,
 		"destroy_command",
+		"destroy_command_base64",
 		"destroy_expect",
 		"",
 		"",
@@ -269,6 +297,7 @@ func resourceRunDelete(ctx context.Context, d *schema.ResourceData, m interface{
 			m,
 			h,
 			"command",
+			"command_base64",
 			"expect",
 			"stdout",
 			"stdout_base64",
@@ -279,8 +308,8 @@ func resourceRunDelete(ctx context.Context, d *schema.ResourceData, m interface{
 		if revErr != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Warning,
-				Summary:  "Error while revert deletion.",
-				Detail:   fmt.Sprintf("Error while revert deletion. %s", revErr.Error()),
+				Summary:  "error while reverting deletion",
+				Detail:   fmt.Sprintf("error while reverting deletion: %s", revErr.Error()),
 			})
 		}
 		return diags

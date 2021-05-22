@@ -46,7 +46,7 @@ func dataSourceKeyscanRead(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(err)
 	}
 
-	err = h.ValidateHostInfo()
+	err = h.validateHostInfo()
 	if err != nil {
 		return diag.FromErr(err)
 	}

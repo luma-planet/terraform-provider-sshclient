@@ -17,6 +17,7 @@ import (
 
 const (
 	permPatStr = `^[0-7][0-7][0-7]$`
+	permDef    = "644"
 )
 
 var (
@@ -50,7 +51,8 @@ func resourceScpPut() *schema.Resource {
 			},
 			"permissions": {
 				Type:     schema.TypeString,
-				Required: true,
+				Default:  permDef,
+				Optional: true,
 				Description: fmt.Sprintf(
 					"Permission information in %s form that each block represents user, group and others access in order, and each bits in blocks represents read, write and execute permissions. This is compatible with the stat(1) command `stat -c %%a`. For example, you can use 777 to grant all full access, or use can use 644 for restricted access.",
 					permPatStr,
@@ -68,8 +70,14 @@ func resourceScpPutCreateUpdate(ctx context.Context, d *schema.ResourceData, m i
 	data, okData := d.GetOk("data")
 	data64, okData64 := d.GetOk("data_base64")
 
-	if okData == okData64 {
+	if okData && okData64 {
 		return diag.Errorf("Exactly one of data and data_base64 should be specified.")
+	}
+
+	// Empty string will be converted to null.
+	if !okData && !okData64 {
+		data = ""
+		okData = true
 	}
 
 	var b []byte
@@ -91,11 +99,11 @@ func resourceScpPutCreateUpdate(ctx context.Context, d *schema.ResourceData, m i
 	}
 
 	err = func() error {
-		if err := h.ValidateHostInfo(); err != nil {
+		if err := h.validateHostInfo(); err != nil {
 			return err
 		}
 
-		if err := h.ValidateAuthInfo(); err != nil {
+		if err := h.validateAuthInfo(); err != nil {
 			return err
 		}
 
@@ -111,7 +119,12 @@ func resourceScpPutCreateUpdate(ctx context.Context, d *schema.ResourceData, m i
 		defer c.Close()
 
 		remotePath := d.Get("remote_path").(string)
-		perm, err := parsePermStr(d.Get("permissions").(string))
+		perm := permDef
+		if p, ok := d.GetOk("permissions"); ok {
+			perm = p.(string)
+		}
+
+		perm, err = parsePermStr(perm)
 		if err != nil {
 			return err
 		}
@@ -151,11 +164,11 @@ func resourceScpPutRead(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.FromErr(err)
 	}
 
-	if err := h.ValidateHostInfo(); err != nil {
+	if err := h.validateHostInfo(); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := h.ValidateAuthInfo(); err != nil {
+	if err := h.validateAuthInfo(); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -174,7 +187,7 @@ func resourceScpPutDelete(ctx context.Context, d *schema.ResourceData, m interfa
 func parsePermStr(perms string) (string, error) {
 	match := permPat.Match([]byte(perms))
 	if !match {
-		return "", fmt.Errorf("Permissions string must be in form of %s .", permPatStr)
+		return "", fmt.Errorf("permissions string must be in form of %s", permPatStr)
 	}
 
 	return fmt.Sprintf("0%s", perms), nil
