@@ -18,7 +18,7 @@ jobs:
         export TEST_PW_SSH_PASSWORD=$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | tail -n +1 | head -c32)
         echo pwuser:$TEST_PW_SSH_PASSWORD | sudo chpasswd
         TEST_PUBKEY_SSH_PRIKEY_PATH=/home/pubkeyuser/.ssh/id_rsa_test
-        sudo sudo -u mkdir -p $(dirname $TEST_PUBKEY_SSH_PRIKEY_PATH)
+        sudo sudo -u pubkeyuser mkdir -p $(dirname $TEST_PUBKEY_SSH_PRIKEY_PATH)
         sudo sudo -u pubkeyuser ssh-keygen -q -t rsa -b 4096 -f $TEST_PUBKEY_SSH_PRIKEY_PATH -N ''
 
         cat <<EOF
