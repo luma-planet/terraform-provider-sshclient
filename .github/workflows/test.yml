@@ -24,7 +24,7 @@ jobs:
         sudo cp $TEST_PUBKEY_SSH_PRIKEY_PATH.pub /home/pubkeyuser/.ssh/authorized_key
         sudo chown -R pubkeyuser:pubkeyuser /home/pubkeyuser
 
-        cat <<EOF
+        cat <<EOF > test.local.env
         TEST_PW_SSH_HOST=localhost
         TEST_PW_SSH_USER=pwuser
         TEST_PW_SSH_PASSWORD=$TEST_PW_SSH_PASSWORD
@@ -32,7 +32,7 @@ jobs:
         TEST_PUBKEY_SSH_HOST=localhost
         TEST_PUBKEY_SSH_USER=pubkeyuser
         TEST_PUBKEY_SSH_PRIKEY_PATH=$TEST_PUBKEY_SSH_PRIKEY_PATH.pub
-        EOF > test.local.env
+        EOF
 
         sudo sed -i -e 's/^\s*#\?\s*PasswordAuthentication\s.*$/PasswordAuthentication yes/g' /etc/ssh/sshd_config
         sudo service ssh reload
