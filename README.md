@@ -1,7 +1,8 @@
 # Terraform Provider SSH Client
 
 [![](https://img.shields.io/github/go-mod/go-version/luma-planet/terraform-provider-sshclient?style=flat-square)](https://github.com/luma-planet/terraform-provider-sshclient)
-[![](https://img.shields.io/github/workflow/status/luma-planet/terraform-provider-sshclient/staticcheck?style=flat-square)]()
+[![](https://img.shields.io/github/workflow/status/luma-planet/terraform-provider-sshclient/test?style=flat-square)](https://github.com/luma-planet/terraform-provider-sshclient/actions/workflows/test.yml)
+[![](https://img.shields.io/github/workflow/status/luma-planet/terraform-provider-sshclient/staticcheck?style=flat-square)](https://github.com/luma-planet/terraform-provider-sshclient/actions/workflows/staticcheck.yml)
 
 Run the following command to build the provider
 
@@ -25,8 +26,9 @@ terraform init && terraform apply
 
 ## TODO for v1
 
-- [ ] release
-- [ ] unit test
-- [ ] acc test
-- [ ] CI
+- [x] release
+- [x] unit test
+- [x] acc test
+- [x] CI
 - [ ] badges
+- [ ] doc
