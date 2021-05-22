@@ -16,7 +16,7 @@ jobs:
         sudo useradd -m -d /home/pubkeyuser -s /bin/bash pubkeyuser
         sudo useradd -m -d /home/pwuser -s /bin/bash pwuser
         export TEST_PW_SSH_PASSWORD=$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c32)
-        echo $TEST_PW_SSH_PASSWORD | sudo passwd --stdin pwuser
+        echo pwuser:$TEST_PW_SSH_PASSWORD | sudo chpasswd
         TEST_PUBKEY_SSH_PRIKEY_PATH=/home/pubkeyuser/.ssh/id_rsa_test
         ssh-keygen -q -t rsa -b 4096 -f $TEST_PUBKEY_SSH_PRIKEY_PATH -N ''
         sudo chown -R pubkeyuser:pubkeyuser /home/pubkeyuser
