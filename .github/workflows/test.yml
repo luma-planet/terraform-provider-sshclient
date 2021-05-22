@@ -19,7 +19,7 @@ jobs:
         echo pwuser:$TEST_PW_SSH_PASSWORD | sudo chpasswd
         TEST_PUBKEY_SSH_PRIKEY_PATH=~/.ssh/id_rsa_test
         sudo sudo -u pubkeyuser mkdir -p $(dirname $TEST_PUBKEY_SSH_PRIKEY_PATH)
-        ssh-keygen -q -t rsa -b 4096 -f $TEST_PUBKEY_SSH_PRIKEY_PATH -N ''
+        sudo ssh-keygen -q -t rsa -b 4096 -f $TEST_PUBKEY_SSH_PRIKEY_PATH -N ''
         sudo cp $TEST_PUBKEY_SSH_PRIKEY_PATH.pub /home/pubkeyuser/.ssh/authorized_key
         sudo chown -R pubkeyuser:pubkeyuser /home/pubkeyuser
 
