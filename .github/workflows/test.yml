@@ -21,8 +21,10 @@ jobs:
         mkdir -p ~/.ssh
         ssh-keygen -q -t rsa -b 4096 -f "$TEST_PUBKEY_SSH_PRIKEY_PATH" -N ''
         sudo mkdir -p /home/pubkeyuser/.ssh
-        cat "$TEST_PUBKEY_SSH_PRIKEY_PATH.pub" | sudo sh -c 'tee -a /home/pubkeyuser/.ssh/authorized_keys >/dev/null'
+        sudo cp "$TEST_PUBKEY_SSH_PRIKEY_PATH.pub" /home/pubkeyuser/.ssh/authorized_keys
         sudo chown -R pubkeyuser:pubkeyuser /home/pubkeyuser
+        sudo chmod 700 /home/pubkeyuser/.ssh
+        sudo chmod 600 /home/pubkeyuser/.ssh/authorized_keys
 
         cat <<EOF > test.local.env
         TEST_PW_SSH_HOST=localhost
