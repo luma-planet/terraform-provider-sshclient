@@ -31,7 +31,7 @@ jobs:
 
         TEST_PUBKEY_SSH_HOST=localhost
         TEST_PUBKEY_SSH_USER=pubkeyuser
-        TEST_PUBKEY_SSH_PRIKEY_PATH=$TEST_PUBKEY_SSH_PRIKEY_PATH.pub
+        TEST_PUBKEY_SSH_PRIKEY_PATH=$TEST_PUBKEY_SSH_PRIKEY_PATH
         EOF
 
         sudo sed -i -e 's/^\s*#\?\s*PasswordAuthentication\s.*$/PasswordAuthentication yes/g' /etc/ssh/sshd_config
