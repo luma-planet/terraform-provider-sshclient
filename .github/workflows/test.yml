@@ -35,6 +35,7 @@ jobs:
         EOF
 
         sudo sed -i -e 's/^\s*#\?\s*PasswordAuthentication\s.*$/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+        sudo sed -i -e 's/^\s*#\?\s*PubkeyAuthentication\s.*$/PubkeyAuthentication yes/g' /etc/ssh/sshd_config
         sudo service ssh reload
 
         ssh -o StrictHostKeyChecking=no -i "$TEST_PUBKEY_SSH_PRIKEY_PATH" pubkeyuser@localhost echo pubkeyuser
