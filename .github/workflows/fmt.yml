@@ -1,0 +1,19 @@
+name: fmt
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '^1.16.4'
+    - uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 0.15.4
+    - run: make gofmt-check
+    - run: make tffmt-check

@@ -3,21 +3,21 @@ variable "hostname" {
 }
 
 variable "username" {
-  type = string
+  type    = string
   default = "root"
 }
 
 variable "port" {
-  type = number
+  type    = number
   default = null
 }
 
 variable "password" {
-  type = string
+  type    = string
   default = null
 }
 
 variable "client_private_key_pem_path" {
-  type = string
+  type    = string
   default = null
 }

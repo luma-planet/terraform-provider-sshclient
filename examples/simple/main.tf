@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     sshclient = {
-      version = "0.2"
+      version = "1.0"
       source  = "github.com/luma-planet/sshclient"
     }
   }
