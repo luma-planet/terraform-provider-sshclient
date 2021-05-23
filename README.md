@@ -1,8 +1,10 @@
 # Terraform Provider SSH Client
 
 [![](https://img.shields.io/github/go-mod/go-version/luma-planet/terraform-provider-sshclient?style=flat-square)](https://github.com/luma-planet/terraform-provider-sshclient)
+[![Go Report Card](https://goreportcard.com/badge/github.com/luma-planet/terraform-provider-sshclient)](https://goreportcard.com/report/github.com/luma-planet/terraform-provider-sshclient)
 [![](https://img.shields.io/github/workflow/status/luma-planet/terraform-provider-sshclient/test?label=test&style=flat-square)](https://github.com/luma-planet/terraform-provider-sshclient/actions/workflows/test.yml)
 [![](https://img.shields.io/github/workflow/status/luma-planet/terraform-provider-sshclient/staticcheck?label=staticcheck&style=flat-square)](https://github.com/luma-planet/terraform-provider-sshclient/actions/workflows/staticcheck.yml)
+[![](https://img.shields.io/github/workflow/status/luma-planet/terraform-provider-sshclient/fmt?label=fmt&style=flat-square)](https://github.com/luma-planet/terraform-provider-sshclient/actions/workflows/fmt.yml)
 
 ## Installation
 
@@ -11,7 +13,7 @@ terraform {
   required_providers {
     sshclient = {
       source  = "luma-planet/sshclient"
-      version = "0.2"
+      version = "1.0"
     }
   }
 }
@@ -45,5 +47,6 @@ terraform init && terraform apply
 - [x] unit test
 - [x] acc test
 - [x] CI
-- [ ] badges
-- [ ] doc
+- [x] badges
+- [x] doc
+- [ ] release v1.0
