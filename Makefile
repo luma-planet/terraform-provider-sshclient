@@ -3,7 +3,7 @@ HOSTNAME=github.com
 NAMESPACE=luma-planet
 NAME=sshclient
 BINARY=terraform-provider-${NAME}
-VERSION=0.2
+VERSION=1.0
 OS_ARCH=linux_amd64
 
 .PHONY: default
@@ -41,6 +41,24 @@ test:
 .PHONY: testacc
 testacc:
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 30m
+
+.PHONY: gofmt-check
+gofmt-check:
+	$(eval FMT_FILES := $(shell gofmt -l . | grep -v vendor))
+	@echo $(FMT_FILES)
+	@test -z "$(FMT_FILES)"
+
+.PHONY: gofmt
+gofmt:
+	gofmt -w .
+
+.PHONY: tffmt-check
+tffmt-check:
+	terraform fmt -recursive -check
+
+.PHONY: tffmt
+tffmt:
+	terraform fmt -recursive -write
 
 .PHONY: staticcheck
 staticcheck:
