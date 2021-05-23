@@ -37,6 +37,6 @@ jobs:
         sudo sed -i -e 's/^\s*#\?\s*PasswordAuthentication\s.*$/PasswordAuthentication yes/g' /etc/ssh/sshd_config
         sudo service ssh reload
 
-        ssh -i "$TEST_PUBKEY_SSH_PRIKEY_PATH" pubkeyuser@localhost echo foooobarrrr
+        ssh -o StrictHostKeyChecking=no -i "$TEST_PUBKEY_SSH_PRIKEY_PATH" pubkeyuser@localhost echo pubkeyuser
 
     - run: make testacc
