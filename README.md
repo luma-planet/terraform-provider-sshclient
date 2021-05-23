@@ -4,6 +4,21 @@
 [![](https://img.shields.io/github/workflow/status/luma-planet/terraform-provider-sshclient/test?label=test&style=flat-square)](https://github.com/luma-planet/terraform-provider-sshclient/actions/workflows/test.yml)
 [![](https://img.shields.io/github/workflow/status/luma-planet/terraform-provider-sshclient/staticcheck?label=staticcheck&style=flat-square)](https://github.com/luma-planet/terraform-provider-sshclient/actions/workflows/staticcheck.yml)
 
+## Installation
+
+```
+terraform {
+  required_providers {
+    sshclient = {
+      source  = "luma-planet/sshclient"
+      version = "0.2"
+    }
+  }
+}
+```
+
+## Development
+
 Run the following command to build the provider
 
 ```shell
