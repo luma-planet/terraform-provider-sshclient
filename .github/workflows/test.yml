@@ -41,6 +41,6 @@ jobs:
 
         sudo service ssh reload
 
-        ssh -o StrictHostKeyChecking=no -i "$TEST_PUBKEY_SSH_PRIKEY_PATH" pubkeyuser@localhost 'hello from $(whoami)'
+        ssh -o StrictHostKeyChecking=no -i "$TEST_PUBKEY_SSH_PRIKEY_PATH" pubkeyuser@localhost 'echo hello from $(whoami)'
 
     - run: make testacc
