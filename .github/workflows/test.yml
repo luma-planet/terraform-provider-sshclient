@@ -15,13 +15,13 @@ jobs:
     - run: |
         sudo useradd -m -d /home/pubkeyuser -s /bin/bash pubkeyuser
         sudo useradd -m -d /home/pwuser -s /bin/bash pwuser
-        export TEST_PW_SSH_PASSWORD="$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | tail -n +1 | head -c32)"
+        export TEST_PW_SSH_PASSWORD="$(openssl rand -base64 32)"
         echo "pwuser:$TEST_PW_SSH_PASSWORD" | sudo chpasswd
         TEST_PUBKEY_SSH_PRIKEY_PATH=~/.ssh/id_rsa_test
         mkdir -p ~/.ssh
         ssh-keygen -q -t rsa -b 4096 -f "$TEST_PUBKEY_SSH_PRIKEY_PATH" -N ''
         sudo mkdir -p /home/pubkeyuser/.ssh
-        sudo cp "$TEST_PUBKEY_SSH_PRIKEY_PATH.pub" /home/pubkeyuser/.ssh/authorized_keys
+        cat "$TEST_PUBKEY_SSH_PRIKEY_PATH.pub" sudo sh -c 'tee -a /home/pubkeyuser/.ssh/authorized_keys >/dev/null'
         sudo chown -R pubkeyuser:pubkeyuser /home/pubkeyuser
 
         cat <<EOF > test.local.env
